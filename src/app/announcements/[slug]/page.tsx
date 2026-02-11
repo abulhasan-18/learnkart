@@ -4,13 +4,13 @@ import Link from 'next/link'
 import { Calendar, Clock, Users, Video, Award, CheckCircle } from 'lucide-react'
 
 interface LiveClassPageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export default async function LiveClassPage({ params }: LiveClassPageProps) {
-  const { slug } = params
+  const { slug } = await params
 
   // Get category by slug
   const category = await prisma.category.findUnique({
