@@ -36,7 +36,9 @@ interface Course {
 }
 
 export function CoursePlayer({ course }: { course: Course }) {
-  const [currentVideo, setCurrentVideo] = useState<Video | null>(course.videos[0] || null)
+  const [currentVideo, setCurrentVideo] = useState<Video | null>(
+    course.videos.length > 0 ? course.videos[0] : null
+  )
   const [currentTest, setCurrentTest] = useState<Test | null>(null)
   const [completedVideos, setCompletedVideos] = useState<Set<string>>(new Set())
   const [completedTests, setCompletedTests] = useState<Set<string>>(new Set())
@@ -184,11 +186,28 @@ function TestComponent({ test, onComplete }: { test: Test; onComplete: () => voi
   const [answers, setAnswers] = useState<number[]>([])
   const [showResults, setShowResults] = useState(false)
 
+  // Safety check for questions
+  if (!test.questions || test.questions.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600 dark:text-gray-400">No questions available for this test.</p>
+      </div>
+    )
+  }
+
   const question = test.questions[currentQuestion]
+  if (!question) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600 dark:text-gray-400">Error loading question.</p>
+      </div>
+    )
+  }
+
   let options: string[] = []
   
   try {
-    options = question ? JSON.parse(question.options) : []
+    options = JSON.parse(question.options)
   } catch (error) {
     console.error('Error parsing question options:', error)
     options = []
@@ -292,10 +311,10 @@ function TestComponent({ test, onComplete }: { test: Test; onComplete: () => voi
         </div>
       </div>
 
-      <h3 className="text-xl font-bold mb-6">{question.question}</h3>
+      <h3 className="text-xl font-bold mb-6">{question?.question || 'Loading question...'}</h3>
 
       <div className="space-y-3 mb-6">
-        {options.map((option, index) => (
+        {options.length > 0 ? options.map((option, index) => (
           <button
             key={index}
             onClick={() => handleAnswer(index)}
@@ -307,7 +326,11 @@ function TestComponent({ test, onComplete }: { test: Test; onComplete: () => voi
           >
             {option}
           </button>
-        ))}
+        )) : (
+          <div className="text-center text-gray-600 dark:text-gray-400">
+            No options available for this question.
+          </div>
+        )}
       </div>
 
       <div className="flex justify-between">

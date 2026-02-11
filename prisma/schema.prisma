@@ -26,6 +26,8 @@ model User {
   enrollments   Enrollment[]
   testResults   TestResult[]
   passwordResets PasswordReset[]
+  
+  @@index([email])
 }
 
 model PasswordReset {
@@ -36,6 +38,10 @@ model PasswordReset {
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
+  
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Category {
@@ -45,6 +51,8 @@ model Category {
   description String?
   courses     Course[]
   createdAt   DateTime @default(now())
+  
+  @@index([slug])
 }
 
 model Course {
@@ -69,6 +77,10 @@ model Course {
   liveClasses LiveClass[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isFree])
 }
 
 model LiveClass {
@@ -85,6 +97,10 @@ model LiveClass {
   attendees   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  @@index([courseId])
+  @@index([status])
+  @@index([scheduledAt])
 }
 
 model Video {
@@ -133,6 +149,9 @@ model Enrollment {
   enrolledAt  DateTime @default(now())
   
   @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+  @@index([enrolledAt])
 }
 
 model TestResult {

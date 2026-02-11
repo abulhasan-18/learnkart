@@ -9,6 +9,23 @@ interface LiveClassPageProps {
   }>
 }
 
+interface LiveClassWithStats {
+  id: string
+  title: string
+  description: string
+  scheduledAt: Date
+  duration: string
+  meetingUrl: string | null
+  status: string
+  instructor: string
+  attendees: number
+  courseName: string
+  courseSlug: string
+  courseStudents: number
+  courseCertified: number
+  enrollmentsAfterClass: number
+}
+
 export default async function LiveClassPage({ params }: LiveClassPageProps) {
   const { slug } = await params
 
@@ -252,7 +269,7 @@ function LiveClassCard({
   isLive = false,
   isPast = false,
 }: {
-  liveClass: any
+  liveClass: LiveClassWithStats
   isLive?: boolean
   isPast?: boolean
 }) {

@@ -9,15 +9,31 @@ interface RateLimitStore {
 
 const store: RateLimitStore = {}
 
-// Clean up old entries every 5 minutes
-setInterval(() => {
+// Clean up interval - only in Node.js environment, not during build
+let cleanupInterval: NodeJS.Timeout | null = null
+
+// Only start cleanup in runtime, not during build
+if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
+  // Clean up old entries every 5 minutes in development
+  cleanupInterval = setInterval(() => {
+    const now = Date.now()
+    Object.keys(store).forEach(key => {
+      if (store[key].resetTime < now) {
+        delete store[key]
+      }
+    })
+  }, 5 * 60 * 1000)
+}
+
+// In production, use periodic cleanup on demand
+function cleanupStore() {
   const now = Date.now()
   Object.keys(store).forEach(key => {
     if (store[key].resetTime < now) {
       delete store[key]
     }
   })
-}, 5 * 60 * 1000)
+}
 
 export interface RateLimitOptions {
   interval: number // Time window in milliseconds
@@ -28,6 +44,11 @@ export function rateLimit(options: RateLimitOptions) {
   return async function checkRateLimit(
     request: Request
   ): Promise<NextResponse | null> {
+    // Clean up expired entries in production on each request
+    if (process.env.NODE_ENV === 'production') {
+      cleanupStore()
+    }
+    
     // Get client identifier (IP address)
     const forwarded = request.headers.get('x-forwarded-for')
     const ip = forwarded ? forwarded.split(',')[0] : 'unknown'
