@@ -1101,8 +1101,121 @@ async function main() {
     },
   })
 
+  // Create Live Classes
+  const liveClasses = await Promise.all([
+    // Web Development Category - Django and Next.js courses
+    prisma.liveClass.create({
+      data: {
+        title: 'Django REST API Workshop',
+        description: 'Live coding session: Building a production-ready REST API with Django REST Framework',
+        courseId: djangoCourse.id,
+        scheduledAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+        duration: '2 hours',
+        meetingUrl: 'https://zoom.us/j/123456789',
+        status: 'upcoming',
+        instructor: 'Corey Schafer',
+        attendees: 0,
+      },
+    }),
+    prisma.liveClass.create({
+      data: {
+        title: 'Next.js Server Actions Deep Dive',
+        description: 'Advanced patterns for Server Actions and form handling in Next.js 14',
+        courseId: nextJsCourse.id,
+        scheduledAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
+        duration: '1.5 hours',
+        meetingUrl: 'https://meet.google.com/abc-defg-hij',
+        status: 'upcoming',
+        instructor: 'Maximilian Schwarzmüller',
+        attendees: 0,
+      },
+    }),
+    // Machine Learning Category
+    prisma.liveClass.create({
+      data: {
+        title: 'Neural Networks from Scratch',
+        description: 'Build and train neural networks without frameworks - understand the math behind AI',
+        courseId: machineLearningCourse.id,
+        scheduledAt: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 1 day from now
+        duration: '3 hours',
+        meetingUrl: 'https://zoom.us/j/987654321',
+        status: 'upcoming',
+        instructor: 'Kirill Eremenko',
+        attendees: 0,
+      },
+    }),
+    prisma.liveClass.create({
+      data: {
+        title: 'ML Model Deployment Workshop',
+        description: 'Deploy your machine learning models to production with Docker and AWS',
+        courseId: machineLearningCourse.id,
+        scheduledAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+        duration: '2.5 hours',
+        meetingUrl: 'https://zoom.us/j/111222333',
+        status: 'completed',
+        instructor: 'Kirill Eremenko',
+        attendees: 142,
+      },
+    }),
+    // Data Science Category
+    prisma.liveClass.create({
+      data: {
+        title: 'Data Visualization Masterclass',
+        description: 'Create stunning visualizations with Matplotlib, Seaborn, and Plotly',
+        courseId: dataScienceCourse.id,
+        scheduledAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+        duration: '2 hours',
+        meetingUrl: 'https://meet.google.com/xyz-abcd-efg',
+        status: 'upcoming',
+        instructor: 'Jose Portilla',
+        attendees: 0,
+      },
+    }),
+    prisma.liveClass.create({
+      data: {
+        title: 'Real-world Data Science Project',
+        description: 'End-to-end project: From data collection to model deployment',
+        courseId: dataScienceCourse.id,
+        scheduledAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+        duration: '4 hours',
+        meetingUrl: 'https://zoom.us/j/444555666',
+        status: 'completed',
+        instructor: 'Jose Portilla',
+        attendees: 218,
+      },
+    }),
+    // Python Category
+    prisma.liveClass.create({
+      data: {
+        title: 'Python Automation Bootcamp',
+        description: 'Automate boring tasks with Python: web scraping, file handling, and more',
+        courseId: pythonCourse.id,
+        scheduledAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), // 4 days from now
+        duration: '2 hours',
+        meetingUrl: 'https://zoom.us/j/777888999',
+        status: 'upcoming',
+        instructor: 'Dr. Angela Yu',
+        attendees: 0,
+      },
+    }),
+    prisma.liveClass.create({
+      data: {
+        title: 'Advanced Python Techniques Q&A',
+        description: 'Ask me anything about decorators, generators, context managers, and more',
+        courseId: pythonCourse.id,
+        scheduledAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+        duration: '1.5 hours',
+        meetingUrl: 'https://meet.google.com/python-qna',
+        status: 'completed',
+        instructor: 'Dr. Angela Yu',
+        attendees: 95,
+      },
+    }),
+  ])
+
   console.log('Seeding completed successfully!')
   console.log({
+    categories,
     pythonCourse,
     mernCourse,
     dataScienceCourse,
@@ -1111,6 +1224,7 @@ async function main() {
     machineLearningCourse,
     flutterCourse,
     djangoCourse,
+    liveClasses,
   })
 }
 
