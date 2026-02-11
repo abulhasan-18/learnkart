@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  enrollments   Enrollment[]
+  testResults   TestResult[]
+  passwordResets PasswordReset[]
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  courses     Course[]
+  createdAt   DateTime @default(now())
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  title       String
+  slug        String       @unique
+  description String
+  thumbnail   String
+  price       Float
+  isFree      Boolean      @default(false)
+  level       String
+  duration    String
+  instructor  String
+  rating      Float        @default(0)
+  students    Int          @default(0)
+  certified   Int          @default(0)
+  categoryId  String
+  category    Category     @relation(fields: [categoryId], references: [id])
+  videos      Video[]
+  tests       Test[]
+  enrollments Enrollment[]
+  liveClasses LiveClass[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model LiveClass {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  scheduledAt DateTime
+  duration    String
+  meetingUrl  String?
+  status      String   @default("upcoming") // upcoming, live, completed
+  instructor  String
+  attendees   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Video {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  url         String
+  duration    String
+  order       Int
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model Test {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  order       Int
+  courseId    String
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  testResults TestResult[]
+  createdAt   DateTime     @default(now())
+}
+
+model Question {
+  id              String   @id @default(cuid())
+  question        String
+  options         String
+  correctAnswer   Int
+  explanation     String?
+  order           Int
+  testId          String
+  test            Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+}
+
+model Enrollment {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress    Int      @default(0)
+  enrolledAt  DateTime @default(now())
+  
+  @@unique([userId, courseId])
+}
+
+model TestResult {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testId      String
+  test        Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  score       Int
+  totalQuestions Int
+  answers     String
+  completedAt DateTime @default(now())
+}
