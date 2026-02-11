@@ -15,8 +15,11 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/adapter-better-sqlite3": "^7.3.0",
+    "@prisma/client": "^6.19.2",
+    "@types/better-sqlite3": "^7.6.13",
     "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.6.2",
     "express-rate-limit": "^8.2.1",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
@@ -38,7 +41,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "prisma": "^5.22.0",
+    "prisma": "^6.19.2",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"

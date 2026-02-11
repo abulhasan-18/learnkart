@@ -2,10 +2,10 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-5.22.0-2D3748)](https://www.prisma.io/)
+[![Prisma](https://img.shields.io/badge/Prisma-6.19.2-2D3748)](https://www.prisma.io/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38B2AC)](https://tailwindcss.com/)
 
-A full-featured e-learning platform built with Next.js 16, featuring video courses, interactive tests, live class announcements, and secure authentication.
+A full-featured e-learning platform built with Next.js 16, featuring video courses, interactive tests, live class announcements with statistics, and secure authentication.
 
 ## Table of Contents
 
@@ -22,22 +22,25 @@ A full-featured e-learning platform built with Next.js 16, featuring video cours
 ## Features
 
 ### Core Features
-- **Course Management** - Browse, search, and enroll in courses with video lectures
-- **Video Player** - Custom video player with progress tracking and speed controls
-- **Interactive Tests** - Multiple-choice quizzes with instant feedback
-- **User Authentication** - Secure login/register with JWT sessions
-- **Password Reset** - Forgot password flow with email-based token verification
-- **Live Class Announcements** - Schedule and announce live classes by category
-- **Dark Mode** - Full dark mode support with smooth transitions
-- **Responsive Design** - Mobile-first design with Tailwind CSS
+
+- 🎓 **Course Management** - Browse, search, and enroll in courses with video lectures
+- 📹 **Video Player** - Custom video player with progress tracking and speed controls
+- 📝 **Interactive Tests** - Multiple-choice quizzes with instant feedback
+- 🔐 **User Authentication** - Secure login/register with JWT sessions
+- 🔑 **Password Reset** - Forgot password flow with email-based token verification
+- 📢 **Live Class Announcements** - Schedule and display live classes by category
+- 📊 **Event Statistics** - Track enrollments, attendance, and certifications for past events
+- 🌙 **Dark Mode** - Full dark mode support with smooth transitions
+- 📱 **Responsive Design** - Mobile-first design with Tailwind CSS
 
 ### Security Features
-- **Rate Limiting** - Protect auth endpoints from brute force attacks
-- **Input Validation** - Zod schemas for all user inputs
-- **Password Hashing** - bcrypt with 10 salt rounds
-- **Secure Sessions** - HttpOnly, Secure, SameSite cookies
-- **CSRF Protection** - Built-in with NextAuth.js
-- **SQL Injection Prevention** - Prisma parameterized queries
+
+- 🛡️ **Rate Limiting** - Protect auth endpoints from brute force attacks
+- ✅ **Input Validation** - Zod schemas for all user inputs
+- 🔒 **Password Hashing** - bcrypt with 10 salt rounds
+- 🍪 **Secure Sessions** - HttpOnly, Secure, SameSite cookies
+- 🔐 **CSRF Protection** - Built-in with NextAuth.js
+- 💉 **SQL Injection Prevention** - Prisma parameterized queries
 
 ## Architecture
 
@@ -45,25 +48,25 @@ A full-featured e-learning platform built with Next.js 16, featuring video cours
 
 ```mermaid
 graph TB
-    subgraph Client["Client Layer"]
-        Browser["Next.js React App<br/>(Browser)"]
-        SSR["Server Components<br/>(SSR)"]
+    subgraph Client[Client Layer]
+        Browser[Next.js React App<br/>Browser]
+        SSR[Server Components<br/>SSR]
     end
 
-    subgraph API["API Layer"]
-        AuthAPI["Auth API<br/>/api/auth/*"]
-        CoursesAPI["Courses API<br/>/api/courses/*"]
-        RateLimit["Rate Limiter<br/>(In-Memory)"]
+    subgraph API[API Layer]
+        AuthAPI[Auth API<br/>/api/auth/*]
+        CoursesAPI[Courses API<br/>/api/courses/*]
+        RateLimit[Rate Limiter<br/>In-Memory]
     end
 
-    subgraph Services["Service Layer"]
-        NextAuth["NextAuth.js<br/>(JWT Strategy)"]
-        Email["Email Service<br/>(Nodemailer)"]
-        Validation["Validation<br/>(Zod)"]
+    subgraph Services[Service Layer]
+        NextAuth[NextAuth.js<br/>JWT Strategy]
+        Email[Email Service<br/>Nodemailer]
+        Validation[Validation<br/>Zod]
     end
 
-    subgraph Data["Data Layer"]
-        Prisma["Prisma ORM"]
+    subgraph Data[Data Layer]
+        Prisma[Prisma ORM]
         DB[(SQLite DB<br/>dev.db)]
     end
 

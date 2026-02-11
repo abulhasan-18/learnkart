@@ -10,6 +10,8 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  // Note: VS Code extension shows a warning here, but this is correct for Prisma 6.x
+  // The warning is for Prisma 7+ only. Remove this url when upgrading to Prisma 7.
   url      = env("DATABASE_URL")
 }
 

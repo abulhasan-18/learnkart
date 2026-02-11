@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Calendar, Clock, Users, Video, Award, CheckCircle } from 'lucide-react'
+import { Calendar, Clock, Users, Video, Award, CheckCircle, TrendingUp, BookOpen } from 'lucide-react'
 
 interface LiveClassPageProps {
   params: Promise<{
@@ -30,6 +30,7 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
           scheduledAt: 'desc',
         },
       },
+      enrollments: true,
       _count: {
         select: {
           enrollments: true,
@@ -38,14 +39,24 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
     },
   })
 
-  // Separate live classes by status
+  // Separate live classes by status and add course stats
   const now = new Date()
   const allLiveClasses = courses.flatMap((course) =>
-    course.liveClasses.map((liveClass) => ({
-      ...liveClass,
-      courseName: course.title,
-      courseSlug: course.slug,
-    }))
+    course.liveClasses.map((liveClass) => {
+      // Calculate enrollments that happened after this live class
+      const enrollmentsAfterClass = course.enrollments.filter(
+        (enrollment) => new Date(enrollment.enrolledAt) >= new Date(liveClass.scheduledAt)
+      ).length
+
+      return {
+        ...liveClass,
+        courseName: course.title,
+        courseSlug: course.slug,
+        courseStudents: course.students,
+        courseCertified: course.certified,
+        enrollmentsAfterClass,
+      }
+    })
   )
 
   const upcomingClasses = allLiveClasses.filter(
@@ -170,9 +181,15 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
         {/* Upcoming Classes */}
         {upcomingClasses.length > 0 ? (
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              Upcoming Classes
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Upcoming Classes
+              </h2>
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <Calendar className="w-4 h-4" />
+                <span>{upcomingClasses.length} scheduled</span>
+              </div>
+            </div>
             <div className="grid grid-cols-1 gap-6">
               {upcomingClasses.map((liveClass) => (
                 <LiveClassCard key={liveClass.id} liveClass={liveClass} />
@@ -201,9 +218,23 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
         {/* Past Classes */}
         {completedClasses.length > 0 && (
           <section>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              Past Classes
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Past Classes
+              </h2>
+              <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-2">
+                  <Video className="w-4 h-4" />
+                  <span>{completedClasses.length} events conducted</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  <span>
+                    {completedClasses.reduce((sum, lc) => sum + lc.attendees, 0)} total attendees
+                  </span>
+                </div>
+              </div>
+            </div>
             <div className="grid grid-cols-1 gap-6">
               {completedClasses.map((liveClass) => (
                 <LiveClassCard key={liveClass.id} liveClass={liveClass} isPast />
@@ -301,6 +332,52 @@ function LiveClassCard({
                 </div>
               )}
             </div>
+
+            {/* Statistics for Past Events */}
+            {isPast && (
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  Impact Metrics
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3 border border-blue-100 dark:border-blue-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                        Enrollments After Event
+                      </span>
+                    </div>
+                    <p className="text-lg font-bold text-blue-900 dark:text-blue-100">
+                      {liveClass.enrollmentsAfterClass || 0}
+                    </p>
+                  </div>
+                  
+                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border border-green-100 dark:border-green-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <BookOpen className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+                        Total Course Students
+                      </span>
+                    </div>
+                    <p className="text-lg font-bold text-green-900 dark:text-green-100">
+                      {liveClass.courseStudents?.toLocaleString() || 0}
+                    </p>
+                  </div>
+
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 border border-yellow-100 dark:border-yellow-800">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Award className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                      <span className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">
+                        Certified Students
+                      </span>
+                    </div>
+                    <p className="text-lg font-bold text-yellow-900 dark:text-yellow-100">
+                      {liveClass.courseCertified?.toLocaleString() || 0}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-3">
