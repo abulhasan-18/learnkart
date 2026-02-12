@@ -1,37 +1,50 @@
-import { prisma } from '@/lib/prisma'
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { Calendar, Clock, Users, Video, Award, CheckCircle, TrendingUp, BookOpen, Star, Play, BarChart3, Target } from 'lucide-react'
-import { Metadata } from 'next'
-import { cache } from 'react'
+import { prisma } from "@/lib/prisma";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import {
+  Calendar,
+  Clock,
+  Users,
+  Video,
+  Award,
+  CheckCircle,
+  TrendingUp,
+  BookOpen,
+  Star,
+  Play,
+  BarChart3,
+  Target,
+} from "lucide-react";
+import { Metadata } from "next";
+import { cache } from "react";
 
 interface LiveClassPageProps {
   params: Promise<{
-    slug: string
-  }>
+    slug: string;
+  }>;
 }
 
 interface LiveClassWithStats {
-  id: string
-  title: string
-  description: string
-  scheduledAt: Date
-  duration: string
-  meetingUrl: string | null
-  status: string
-  instructor: string
-  attendees: number
-  courseName: string
-  courseSlug: string
-  courseStudents: number
-  courseCertified: number
-  courseRating: number
-  courseLevel: string
-  coursePrice: number
-  courseIsFree: boolean
-  enrollmentsAfterClass: number
-  conversionRate: number
-  engagementScore: number
+  id: string;
+  title: string;
+  description: string;
+  scheduledAt: Date;
+  duration: string;
+  meetingUrl: string | null;
+  status: string;
+  instructor: string;
+  attendees: number;
+  courseName: string;
+  courseSlug: string;
+  courseStudents: number;
+  courseCertified: number;
+  courseRating: number;
+  courseLevel: string;
+  coursePrice: number;
+  courseIsFree: boolean;
+  enrollmentsAfterClass: number;
+  conversionRate: number;
+  engagementScore: number;
 }
 
 // Cache the category fetch for metadata and page
@@ -43,7 +56,7 @@ const getCategory = cache(async (slug: string) => {
         include: {
           liveClasses: {
             orderBy: {
-              scheduledAt: 'desc',
+              scheduledAt: "desc",
             },
           },
           enrollments: true,
@@ -57,81 +70,99 @@ const getCategory = cache(async (slug: string) => {
         },
       },
     },
-  })
-})
+  });
+});
 
 // Generate metadata for SEO
-export async function generateMetadata({ params }: LiveClassPageProps): Promise<Metadata> {
-  const { slug } = await params
-  const category = await getCategory(slug)
+export async function generateMetadata({
+  params,
+}: LiveClassPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const category = await getCategory(slug);
 
   if (!category) {
     return {
-      title: 'Category Not Found',
-      description: 'The requested category could not be found.',
-    }
+      title: "Category Not Found",
+      description: "The requested category could not be found.",
+    };
   }
 
-  const totalClasses = category.courses.reduce((sum, course) => sum + course.liveClasses.length, 0)
-  const totalStudents = category.courses.reduce((sum, course) => sum + course.students, 0)
-  
+  const totalClasses = category.courses.reduce(
+    (sum, course) => sum + course.liveClasses.length,
+    0,
+  );
+  const totalStudents = category.courses.reduce(
+    (sum, course) => sum + course.students,
+    0,
+  );
+
   return {
     title: `${category.name} Live Classes - Interactive Learning Sessions`,
-    description: category.description || `Join live interactive classes for ${category.name}. ${totalClasses} sessions conducted with ${totalStudents.toLocaleString()} students enrolled.`,
+    description:
+      category.description ||
+      `Join live interactive classes for ${category.name}. ${totalClasses} sessions conducted with ${totalStudents.toLocaleString()} students enrolled.`,
     keywords: `${category.name}, live classes, online learning, interactive sessions, webinar, virtual classroom`,
     openGraph: {
       title: `${category.name} Live Classes`,
-      description: category.description || `Interactive live learning sessions for ${category.name}`,
-      type: 'website',
+      description:
+        category.description ||
+        `Interactive live learning sessions for ${category.name}`,
+      type: "website",
     },
-  }
+  };
 }
 
 export default async function LiveClassPage({ params }: LiveClassPageProps) {
-  const { slug } = await params
+  const { slug } = await params;
 
   // Validate slug format
-  if (!slug || typeof slug !== 'string' || slug.length > 100) {
-    notFound()
+  if (!slug || typeof slug !== "string" || slug.length > 100) {
+    notFound();
   }
 
   // Get category with all related data
-  const category = await getCategory(slug)
+  const category = await getCategory(slug);
 
   if (!category) {
-    notFound()
+    notFound();
   }
 
-  const courses = category.courses
+  const courses = category.courses;
 
   // Validate courses data
   if (!Array.isArray(courses)) {
-    console.error('Invalid courses data structure')
-    notFound()
+    console.error("Invalid courses data structure");
+    notFound();
   }
 
   // Separate live classes by status and add enhanced metrics
-  const now = new Date()
+  const now = new Date();
   const allLiveClasses: LiveClassWithStats[] = courses.flatMap((course) =>
     course.liveClasses.map((liveClass) => {
       // Calculate enrollments that happened after this live class
       const enrollmentsAfterClass = course.enrollments.filter(
-        (enrollment) => new Date(enrollment.enrolledAt) >= new Date(liveClass.scheduledAt)
-      ).length
+        (enrollment) =>
+          new Date(enrollment.enrolledAt) >= new Date(liveClass.scheduledAt),
+      ).length;
 
       // Calculate conversion rate (enrollments after class / attendees)
-      const conversionRate = liveClass.attendees > 0 
-        ? (enrollmentsAfterClass / liveClass.attendees) * 100 
-        : 0
+      const conversionRate =
+        liveClass.attendees > 0
+          ? (enrollmentsAfterClass / liveClass.attendees) * 100
+          : 0;
 
       // Calculate engagement score based on multiple factors
-      const engagementScore = liveClass.status === 'completed'
-        ? Math.min(100, Math.round(
-            (liveClass.attendees / (course.students || 1)) * 50 + // Attendance rate (50%)
-            (conversionRate > 0 ? 30 : 0) + // Conversion bonus (30%)
-            (course.rating / 5) * 20 // Course rating impact (20%)
-          ))
-        : 0
+      const engagementScore =
+        liveClass.status === "completed"
+          ? Math.min(
+              100,
+              Math.round(
+                (liveClass.attendees / (course.students || 1)) * 50 + // Attendance rate (50%)
+                  (conversionRate > 0 ? 30 : 0) + // Conversion bonus (30%)
+                  (course.rating / 5) * 20, // Course rating impact (20%)
+              ),
+            )
+          : 0;
 
       return {
         ...liveClass,
@@ -146,33 +177,60 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
         enrollmentsAfterClass,
         conversionRate: Math.round(conversionRate * 10) / 10,
         engagementScore,
-      }
-    })
-  )
+      };
+    }),
+  );
 
   const upcomingClasses = allLiveClasses.filter(
-    (lc) => lc.status === 'upcoming' && new Date(lc.scheduledAt) > now
-  )
-  const liveClasses = allLiveClasses.filter((lc) => lc.status === 'live')
-  const completedClasses = allLiveClasses.filter((lc) => lc.status === 'completed')
+    (lc) => lc.status === "upcoming" && new Date(lc.scheduledAt) > now,
+  );
+  const liveClasses = allLiveClasses.filter((lc) => lc.status === "live");
+  const completedClasses = allLiveClasses.filter(
+    (lc) => lc.status === "completed",
+  );
 
   // Calculate comprehensive statistics
-  const totalStudents = courses.reduce((sum, course) => sum + course.students, 0)
-  const totalCertified = courses.reduce((sum, course) => sum + course.certified, 0)
-  const totalEnrolled = courses.reduce((sum, course) => sum + course._count.enrollments, 0)
-  const totalVideos = courses.reduce((sum, course) => sum + (course._count.videos || 0), 0)
-  const totalTests = courses.reduce((sum, course) => sum + (course._count.tests || 0), 0)
-  const averageRating = courses.length > 0 
-    ? courses.reduce((sum, course) => sum + course.rating, 0) / courses.length 
-    : 0
-  const totalAttendees = completedClasses.reduce((sum, lc) => sum + lc.attendees, 0)
-  const averageAttendance = completedClasses.length > 0 
-    ? Math.round(totalAttendees / completedClasses.length) 
-    : 0
-  const totalEnrollmentsFromClasses = completedClasses.reduce((sum, lc) => sum + lc.enrollmentsAfterClass, 0)
-  const averageConversionRate = completedClasses.length > 0
-    ? completedClasses.reduce((sum, lc) => sum + lc.conversionRate, 0) / completedClasses.length
-    : 0
+  const totalStudents = courses.reduce(
+    (sum, course) => sum + course.students,
+    0,
+  );
+  const totalCertified = courses.reduce(
+    (sum, course) => sum + course.certified,
+    0,
+  );
+  const totalEnrolled = courses.reduce(
+    (sum, course) => sum + course._count.enrollments,
+    0,
+  );
+  const totalVideos = courses.reduce(
+    (sum, course) => sum + (course._count.videos || 0),
+    0,
+  );
+  const totalTests = courses.reduce(
+    (sum, course) => sum + (course._count.tests || 0),
+    0,
+  );
+  const averageRating =
+    courses.length > 0
+      ? courses.reduce((sum, course) => sum + course.rating, 0) / courses.length
+      : 0;
+  const totalAttendees = completedClasses.reduce(
+    (sum, lc) => sum + lc.attendees,
+    0,
+  );
+  const averageAttendance =
+    completedClasses.length > 0
+      ? Math.round(totalAttendees / completedClasses.length)
+      : 0;
+  const totalEnrollmentsFromClasses = completedClasses.reduce(
+    (sum, lc) => sum + lc.enrollmentsAfterClass,
+    0,
+  );
+  const averageConversionRate =
+    completedClasses.length > 0
+      ? completedClasses.reduce((sum, lc) => sum + lc.conversionRate, 0) /
+        completedClasses.length
+      : 0;
 
   return (
     <div className="min-h-screen bg-linear-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
@@ -180,7 +238,10 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-4">
-            <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">
+            <Link
+              href="/"
+              className="hover:text-blue-600 dark:hover:text-blue-400"
+            >
               Home
             </Link>
             <span>/</span>
@@ -191,7 +252,9 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
               Announcements
             </Link>
             <span>/</span>
-            <span className="text-gray-900 dark:text-white font-medium">{category.name}</span>
+            <span className="text-gray-900 dark:text-white font-medium">
+              {category.name}
+            </span>
           </div>
 
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -212,7 +275,9 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
                   <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
                     {courses.length}
                   </p>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">Active Courses</p>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Active Courses
+                  </p>
                 </div>
               </div>
             </div>
@@ -226,7 +291,9 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
                   <p className="text-2xl font-bold text-green-900 dark:text-green-100">
                     {totalStudents.toLocaleString()}
                   </p>
-                  <p className="text-sm text-green-700 dark:text-green-300">Total Students</p>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Total Students
+                  </p>
                 </div>
               </div>
             </div>
@@ -240,7 +307,9 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
                   <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
                     {totalEnrolled.toLocaleString()}
                   </p>
-                  <p className="text-sm text-purple-700 dark:text-purple-300">Active Enrollments</p>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Active Enrollments
+                  </p>
                 </div>
               </div>
             </div>
@@ -254,7 +323,9 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
                   <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
                     {totalCertified.toLocaleString()}
                   </p>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">Certified Students</p>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Certified Students
+                  </p>
                 </div>
               </div>
             </div>
@@ -265,7 +336,9 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2 mb-1">
                 <Star className="w-4 h-4 text-yellow-500" />
-                <p className="text-xs text-gray-600 dark:text-gray-400">Avg Rating</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Avg Rating
+                </p>
               </div>
               <p className="text-xl font-bold text-gray-900 dark:text-white">
                 {averageRating.toFixed(1)}
@@ -275,7 +348,9 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2 mb-1">
                 <Play className="w-4 h-4 text-blue-500" />
-                <p className="text-xs text-gray-600 dark:text-gray-400">Total Videos</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Total Videos
+                </p>
               </div>
               <p className="text-xl font-bold text-gray-900 dark:text-white">
                 {totalVideos.toLocaleString()}
@@ -285,7 +360,9 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2 mb-1">
                 <BookOpen className="w-4 h-4 text-green-500" />
-                <p className="text-xs text-gray-600 dark:text-gray-400">Total Tests</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Total Tests
+                </p>
               </div>
               <p className="text-xl font-bold text-gray-900 dark:text-white">
                 {totalTests.toLocaleString()}
@@ -295,7 +372,9 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2 mb-1">
                 <BarChart3 className="w-4 h-4 text-purple-500" />
-                <p className="text-xs text-gray-600 dark:text-gray-400">Live Classes</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Live Classes
+                </p>
               </div>
               <p className="text-xl font-bold text-gray-900 dark:text-white">
                 {allLiveClasses.length}
@@ -312,25 +391,33 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Total Sessions</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                    Total Sessions
+                  </p>
                   <p className="text-lg font-bold text-indigo-900 dark:text-indigo-100">
                     {completedClasses.length}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Total Attendees</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                    Total Attendees
+                  </p>
                   <p className="text-lg font-bold text-indigo-900 dark:text-indigo-100">
                     {totalAttendees.toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Avg Attendance</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                    Avg Attendance
+                  </p>
                   <p className="text-lg font-bold text-indigo-900 dark:text-indigo-100">
                     {averageAttendance}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Conversion Rate</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                    Conversion Rate
+                  </p>
                   <p className="text-lg font-bold text-indigo-900 dark:text-indigo-100">
                     {averageConversionRate.toFixed(1)}%
                   </p>
@@ -365,7 +452,11 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
             </h2>
             <div className="grid grid-cols-1 gap-6">
               {liveClasses.map((liveClass) => (
-                <LiveClassCard key={liveClass.id} liveClass={liveClass} isLive />
+                <LiveClassCard
+                  key={liveClass.id}
+                  liveClass={liveClass}
+                  isLive
+                />
               ))}
             </div>
           </section>
@@ -423,21 +514,29 @@ export default async function LiveClassPage({ params }: LiveClassPageProps) {
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4" />
                   <span>
-                    {completedClasses.reduce((sum, lc) => sum + lc.attendees, 0)} total attendees
+                    {completedClasses.reduce(
+                      (sum, lc) => sum + lc.attendees,
+                      0,
+                    )}{" "}
+                    total attendees
                   </span>
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-6">
               {completedClasses.map((liveClass) => (
-                <LiveClassCard key={liveClass.id} liveClass={liveClass} isPast />
+                <LiveClassCard
+                  key={liveClass.id}
+                  liveClass={liveClass}
+                  isPast
+                />
               ))}
             </div>
           </section>
         )}
       </div>
     </div>
-  )
+  );
 }
 
 function LiveClassCard({
@@ -445,41 +544,41 @@ function LiveClassCard({
   isLive = false,
   isPast = false,
 }: {
-  liveClass: LiveClassWithStats
-  isLive?: boolean
-  isPast?: boolean
+  liveClass: LiveClassWithStats;
+  isLive?: boolean;
+  isPast?: boolean;
 }) {
-  const scheduledDate = new Date(liveClass.scheduledAt)
-  
+  const scheduledDate = new Date(liveClass.scheduledAt);
+
   // Enhanced date formatting with more context
-  const formattedDate = scheduledDate.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-  const formattedTime = scheduledDate.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short',
-  })
-  
+  const formattedDate = scheduledDate.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const formattedTime = scheduledDate.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+
   // Calculate time until/since class
-  const now = new Date()
-  const timeDiff = scheduledDate.getTime() - now.getTime()
-  const daysUntil = Math.ceil(timeDiff / (1000 * 60 * 60 * 24))
-  const hoursUntil = Math.ceil(timeDiff / (1000 * 60 * 60))
-  
-  let timeLabel = ''
+  const now = new Date();
+  const timeDiff = scheduledDate.getTime() - now.getTime();
+  const daysUntil = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+  const hoursUntil = Math.ceil(timeDiff / (1000 * 60 * 60));
+
+  let timeLabel = "";
   if (!isPast && !isLive) {
     if (daysUntil > 1) {
-      timeLabel = `Starts in ${daysUntil} days`
+      timeLabel = `Starts in ${daysUntil} days`;
     } else if (hoursUntil > 1) {
-      timeLabel = `Starts in ${hoursUntil} hours`
+      timeLabel = `Starts in ${hoursUntil} hours`;
     } else if (hoursUntil === 1) {
-      timeLabel = 'Starting soon!'
+      timeLabel = "Starting soon!";
     } else {
-      timeLabel = 'Starting now!'
+      timeLabel = "Starting now!";
     }
   }
 
@@ -487,10 +586,10 @@ function LiveClassCard({
     <div
       className={`bg-white dark:bg-gray-800 rounded-xl shadow-md border ${
         isLive
-          ? 'border-red-500 shadow-red-500/20'
+          ? "border-red-500 shadow-red-500/20"
           : isPast
-            ? 'border-gray-200 dark:border-gray-700'
-            : 'border-blue-200 dark:border-blue-800'
+            ? "border-gray-200 dark:border-gray-700"
+            : "border-blue-200 dark:border-blue-800"
       } overflow-hidden hover:shadow-lg transition-shadow`}
     >
       <div className="p-6">
@@ -517,13 +616,15 @@ function LiveClassCard({
                   {timeLabel}
                 </span>
               )}
-              <span className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full ${
-                liveClass.courseLevel === 'Beginner' 
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                  : liveClass.courseLevel === 'Intermediate'
-                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                  : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-              }`}>
+              <span
+                className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full ${
+                  liveClass.courseLevel === "Beginner"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                    : liveClass.courseLevel === "Intermediate"
+                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
+                      : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                }`}
+              >
                 {liveClass.courseLevel}
               </span>
               {liveClass.courseIsFree ? (
@@ -540,7 +641,9 @@ function LiveClassCard({
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
               {liveClass.title}
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">{liveClass.description}</p>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              {liveClass.description}
+            </p>
 
             <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400 mb-4">
               <div className="flex items-center gap-2">
@@ -554,11 +657,19 @@ function LiveClassCard({
               </div>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                <span>Instructor: <span className="font-medium">{liveClass.instructor}</span></span>
+                <span>
+                  Instructor:{" "}
+                  <span className="font-medium">{liveClass.instructor}</span>
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-500" />
-                <span>Course Rating: <span className="font-medium">{liveClass.courseRating.toFixed(1)}</span></span>
+                <span>
+                  Course Rating:{" "}
+                  <span className="font-medium">
+                    {liveClass.courseRating.toFixed(1)}
+                  </span>
+                </span>
               </div>
             </div>
 
@@ -576,7 +687,9 @@ function LiveClassCard({
               {isPast && (
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4" />
-                  <span className="font-medium">{liveClass.attendees} attendees</span>
+                  <span className="font-medium">
+                    {liveClass.attendees} attendees
+                  </span>
                 </div>
               )}
             </div>
@@ -603,7 +716,7 @@ function LiveClassCard({
                       After this session
                     </p>
                   </div>
-                  
+
                   <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3 border border-green-100 dark:border-green-800">
                     <div className="flex items-center gap-2 mb-1">
                       <BookOpen className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -652,7 +765,7 @@ function LiveClassCard({
 
                 {/* Engagement Score */}
                 {liveClass.engagementScore > 0 && (
-                  <div className="mt-3 p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800">
+                  <div className="mt-3 p-3 bg-linear-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg border border-indigo-100 dark:border-indigo-800">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <BarChart3 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -662,13 +775,13 @@ function LiveClassCard({
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className={`h-full rounded-full ${
-                              liveClass.engagementScore >= 70 
-                                ? 'bg-green-500' 
-                                : liveClass.engagementScore >= 40 
-                                ? 'bg-yellow-500' 
-                                : 'bg-red-500'
+                              liveClass.engagementScore >= 70
+                                ? "bg-green-500"
+                                : liveClass.engagementScore >= 40
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
                             }`}
                             style={{ width: `${liveClass.engagementScore}%` }}
                           />
@@ -698,7 +811,7 @@ function LiveClassCard({
             )}
             {!isLive && !isPast && liveClass.meetingUrl && (
               <a
-                href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(liveClass.title)}&dates=${scheduledDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${new Date(scheduledDate.getTime() + 60 * 60 * 1000).toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=${encodeURIComponent(liveClass.description)}`}
+                href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(liveClass.title)}&dates=${scheduledDate.toISOString().replace(/[-:]/g, "").split(".")[0]}Z/${new Date(scheduledDate.getTime() + 60 * 60 * 1000).toISOString().replace(/[-:]/g, "").split(".")[0]}Z&details=${encodeURIComponent(liveClass.description)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-center transition-colors flex items-center justify-center gap-2"
@@ -722,5 +835,5 @@ function LiveClassCard({
         </div>
       </div>
     </div>
-  )
+  );
 }

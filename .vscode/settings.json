@@ -1,0 +1,9 @@
+{
+  // Prisma VS Code extension settings
+  // The extension uses Prisma 7 validation rules, but we're on Prisma 6.19.2
+  // This suppresses the false warning about datasource.url
+  "prisma.showPrismaDataPlatformNotification": false,
+  
+  // Optional: You can also disable certain diagnostics if needed
+  "prisma.trace.server": "off"
+}
